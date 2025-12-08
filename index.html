@@ -210,15 +210,49 @@
             document.getElementById('act-btn').disabled = currentActions.length === 0;
         }
 
+        let animating = false;
+
         function act() {
-            if (currentActions.length === 0) return;
+            if (currentActions.length === 0 || animating) return;
 
             // Pick a random action
             const randomIndex = Math.floor(Math.random() * currentActions.length);
             const action = currentActions[randomIndex];
 
-            const result = movePlayer(action.index);
-            renderFrame(JSON.parse(result));
+            // Start the move and get path length
+            const moveResult = JSON.parse(startMove(action.index));
+            if (moveResult.error) {
+                console.error(moveResult.error);
+                return;
+            }
+
+            if (moveResult.pathLength === 0) {
+                // No path, already teleported
+                renderFrame(JSON.parse(finishMove()));
+                return;
+            }
+
+            // Animate through the path
+            animating = true;
+            document.getElementById('act-btn').disabled = true;
+            let step = 0;
+            const pathLength = moveResult.pathLength;
+
+            function animateStep() {
+                if (step < pathLength) {
+                    const frame = JSON.parse(animStep(step));
+                    renderFrame(frame);
+                    step++;
+                    setTimeout(animateStep, 100);
+                } else {
+                    // Animation complete
+                    const frame = JSON.parse(finishMove());
+                    renderFrame(frame);
+                    animating = false;
+                }
+            }
+
+            animateStep();
         }
 
         function startNewStory() {
