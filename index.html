@@ -23,7 +23,7 @@
             color: #888;
             margin: 20px;
         }
-        #game-container {
+        #stage-container {
             display: none;
             flex-direction: column;
             align-items: center;
@@ -57,28 +57,17 @@
             margin: 0 0 10px 0;
             font-size: 14px;
         }
-        .action-btn {
-            display: block;
-            background: #2d2d4a;
-            color: #eee;
-            border: 1px solid #4a4a6a;
-            padding: 8px 16px;
-            margin: 5px 0;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
+        .action-item {
+            color: #aaa;
+            padding: 4px 0;
             font-size: 14px;
-            text-align: left;
-            width: 100%;
-            border-radius: 4px;
-        }
-        .action-btn:hover {
-            background: #3d3d5a;
-            border-color: #e94560;
         }
         #controls {
             margin-top: 20px;
+            display: flex;
+            gap: 10px;
         }
-        #new-game {
+        .control-btn {
             background: #e94560;
             color: white;
             border: none;
@@ -88,8 +77,12 @@
             font-family: 'Courier New', monospace;
             border-radius: 4px;
         }
-        #new-game:hover {
+        .control-btn:hover {
             background: #ff6b6b;
+        }
+        .control-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
         }
         #footer {
             margin-top: 30px;
@@ -101,16 +94,17 @@
 <body>
     <h1>ODEON</h1>
     <div id="loading">Loading WASM...</div>
-    <div id="game-container">
+    <div id="stage-container">
         <div id="canvas"></div>
         <div id="location"></div>
         <div id="characters"></div>
         <div id="actions">
-            <h3>Actions:</h3>
+            <h3>Available Actions:</h3>
             <div id="action-list"></div>
         </div>
         <div id="controls">
-            <button id="new-game" onclick="startNewGame()">New Game</button>
+            <button id="act-btn" class="control-btn" onclick="act()">Act</button>
+            <button id="new-story" class="control-btn" onclick="startNewStory()">New Story</button>
         </div>
     </div>
     <div id="footer"></div>
@@ -118,6 +112,7 @@
     <script src="wasm_exec.js"></script>
     <script>
         const go = new Go();
+        let currentActions = [];
 
         function ansiToHex(ansi) {
             // Basic 256-color ANSI to hex conversion
@@ -185,27 +180,37 @@
                 document.getElementById('characters').textContent = '';
             }
 
-            // Update actions
+            // Update actions (static display)
+            currentActions = frame.actions || [];
             const actionList = document.getElementById('action-list');
             actionList.innerHTML = '';
-            if (frame.actions) {
-                for (const action of frame.actions) {
-                    const btn = document.createElement('button');
-                    btn.className = 'action-btn';
-                    btn.textContent = action.label;
-                    btn.onclick = () => {
-                        const result = movePlayer(action.index);
-                        renderFrame(JSON.parse(result));
-                    };
-                    actionList.appendChild(btn);
+            if (currentActions.length > 0) {
+                for (const action of currentActions) {
+                    const item = document.createElement('div');
+                    item.className = 'action-item';
+                    item.textContent = '• ' + action.label;
+                    actionList.appendChild(item);
                 }
-            }
-            if (!frame.actions || frame.actions.length === 0) {
+            } else {
                 actionList.innerHTML = '<div style="color:#888">(none available)</div>';
             }
+
+            // Enable/disable Act button based on available actions
+            document.getElementById('act-btn').disabled = currentActions.length === 0;
         }
 
-        function startNewGame() {
+        function act() {
+            if (currentActions.length === 0) return;
+
+            // Pick a random action
+            const randomIndex = Math.floor(Math.random() * currentActions.length);
+            const action = currentActions[randomIndex];
+
+            const result = movePlayer(action.index);
+            renderFrame(JSON.parse(result));
+        }
+
+        function startNewStory() {
             const seed = Date.now();
             const result = newGame(seed);
             renderFrame(JSON.parse(result));
@@ -214,10 +219,10 @@
         WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
             go.run(result.instance);
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('game-container').style.display = 'flex';
+            document.getElementById('stage-container').style.display = 'flex';
 
-            // Start a new game
-            startNewGame();
+            // Start a new story
+            startNewStory();
 
             // Display build info
             const buildInfoJson = getBuildInfo();
