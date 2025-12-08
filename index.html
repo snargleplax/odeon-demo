@@ -38,20 +38,25 @@
             padding: 10px;
             background: #0d0d1a;
         }
+        #info-panel {
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
         #location {
             color: #e94560;
             font-size: 18px;
-            margin: 10px 0;
         }
         #characters {
             color: #4ecdc4;
             font-style: italic;
-            margin-bottom: 10px;
         }
         #actions {
             margin-top: 15px;
             text-align: left;
-            min-height: 100px;
+            height: 120px;
         }
         #actions h3 {
             color: #888;
@@ -97,8 +102,10 @@
     <div id="loading">Loading WASM...</div>
     <div id="stage-container">
         <div id="canvas"></div>
-        <div id="location"></div>
-        <div id="characters"></div>
+        <div id="info-panel">
+            <div id="location"></div>
+            <div id="characters"></div>
+        </div>
         <div id="actions">
             <h3>Available Actions:</h3>
             <div id="action-list"></div>
