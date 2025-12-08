@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Odeon - Graph Theatre</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #e94560;
+            margin-bottom: 5px;
+        }
+        #loading {
+            color: #888;
+            margin: 20px;
+        }
+        #game-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        #canvas {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.0;
+            white-space: pre;
+            border: 2px solid #63b3ed;
+            border-radius: 8px;
+            padding: 10px;
+            background: #0d0d1a;
+        }
+        #location {
+            color: #e94560;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        #characters {
+            color: #4ecdc4;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        #actions {
+            margin-top: 15px;
+            text-align: left;
+        }
+        #actions h3 {
+            color: #888;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        .action-btn {
+            display: block;
+            background: #2d2d4a;
+            color: #eee;
+            border: 1px solid #4a4a6a;
+            padding: 8px 16px;
+            margin: 5px 0;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            text-align: left;
+            width: 100%;
+            border-radius: 4px;
+        }
+        .action-btn:hover {
+            background: #3d3d5a;
+            border-color: #e94560;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        #new-game {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+        }
+        #new-game:hover {
+            background: #ff6b6b;
+        }
+        #footer {
+            margin-top: 30px;
+            color: #555;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ODEON</h1>
+    <div id="loading">Loading WASM...</div>
+    <div id="game-container">
+        <div id="canvas"></div>
+        <div id="location"></div>
+        <div id="characters"></div>
+        <div id="actions">
+            <h3>Actions:</h3>
+            <div id="action-list"></div>
+        </div>
+        <div id="controls">
+            <button id="new-game" onclick="startNewGame()">New Game</button>
+        </div>
+    </div>
+    <div id="footer"></div>
+
+    <script src="wasm_exec.js"></script>
+    <script>
+        const go = new Go();
+
+        function ansiToHex(ansi) {
+            // Basic 256-color ANSI to hex conversion
+            if (!ansi) return null;
+            const n = parseInt(ansi, 10);
+            if (isNaN(n)) return null;
+
+            // Standard colors (0-15)
+            const standard = [
+                '#000000', '#800000', '#008000', '#808000', '#000080', '#800080', '#008080', '#c0c0c0',
+                '#808080', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'
+            ];
+            if (n < 16) return standard[n];
+
+            // 216-color cube (16-231)
+            if (n < 232) {
+                const idx = n - 16;
+                const r = Math.floor(idx / 36) * 51;
+                const g = Math.floor((idx % 36) / 6) * 51;
+                const b = (idx % 6) * 51;
+                return `rgb(${r},${g},${b})`;
+            }
+
+            // Grayscale (232-255)
+            const gray = (n - 232) * 10 + 8;
+            return `rgb(${gray},${gray},${gray})`;
+        }
+
+        function renderFrame(frame) {
+            if (frame.error) {
+                document.getElementById('canvas').textContent = 'Error: ' + frame.error;
+                return;
+            }
+
+            // Render canvas with colors
+            let html = '';
+            for (const row of frame.cells) {
+                for (const cell of row) {
+                    const fg = ansiToHex(cell.fg);
+                    const bg = ansiToHex(cell.bg);
+                    let style = '';
+                    if (fg) style += `color:${fg};`;
+                    if (bg) style += `background:${bg};`;
+
+                    const char = cell.char || ' ';
+                    const escaped = char.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+                    if (style) {
+                        html += `<span style="${style}">${escaped}</span>`;
+                    } else {
+                        html += escaped;
+                    }
+                }
+                html += '\n';
+            }
+            document.getElementById('canvas').innerHTML = html;
+
+            // Update location
+            document.getElementById('location').textContent = frame.location || '';
+
+            // Update characters
+            if (frame.characters && frame.characters.length > 0) {
+                document.getElementById('characters').textContent = frame.characters.join(', ') + ' is here';
+            } else {
+                document.getElementById('characters').textContent = '';
+            }
+
+            // Update actions
+            const actionList = document.getElementById('action-list');
+            actionList.innerHTML = '';
+            if (frame.actions) {
+                for (const action of frame.actions) {
+                    const btn = document.createElement('button');
+                    btn.className = 'action-btn';
+                    btn.textContent = action.label;
+                    btn.onclick = () => {
+                        const result = movePlayer(action.index);
+                        renderFrame(JSON.parse(result));
+                    };
+                    actionList.appendChild(btn);
+                }
+            }
+            if (!frame.actions || frame.actions.length === 0) {
+                actionList.innerHTML = '<div style="color:#888">(none available)</div>';
+            }
+        }
+
+        function startNewGame() {
+            const seed = Date.now();
+            const result = newGame(seed);
+            renderFrame(JSON.parse(result));
+        }
+
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+
+            // Start a new game
+            startNewGame();
+
+            // Display build info
+            const buildInfoJson = getBuildInfo();
+            const buildInfo = JSON.parse(buildInfoJson);
+            const shortSHA = buildInfo.gitSHA.substring(0, 7);
+            document.getElementById('footer').textContent = shortSHA;
+        }).catch(err => {
+            document.getElementById('loading').textContent = 'Error loading WASM: ' + err;
+        });
+    </script>
+</body>
+</html>
