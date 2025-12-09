@@ -13,7 +13,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
         }
         h1 {
             color: #e94560;
@@ -27,6 +29,10 @@
             display: none;
             flex-direction: column;
             align-items: center;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            max-width: 900px;
         }
         #canvas {
             font-family: 'Courier New', monospace;
@@ -37,8 +43,10 @@
             border-radius: 8px;
             padding: 10px;
             background: #0d0d1a;
-            width: 700px;
-            height: 400px;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            box-sizing: border-box;
             overflow: auto;
         }
         #info-panel {
