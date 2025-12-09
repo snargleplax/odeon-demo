@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Odeon - Graph Theatre</title>
     <style>
         body {
@@ -36,7 +37,7 @@
         }
         #canvas {
             font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-size: 18px;
             line-height: 1.0;
             white-space: pre;
             border: 2px solid #63b3ed;
@@ -46,8 +47,15 @@
             flex: 1;
             min-height: 0;
             width: 100%;
+            max-width: 100%;
             box-sizing: border-box;
             overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #canvas-content {
+            text-align: left;
         }
         #info-panel {
             height: 60px;
@@ -112,7 +120,7 @@
     <h1>ODEON</h1>
     <div id="loading">Loading WASM...</div>
     <div id="stage-container">
-        <div id="canvas"></div>
+        <div id="canvas"><div id="canvas-content"></div></div>
         <div id="info-panel">
             <div id="location"></div>
             <div id="characters"></div>
@@ -162,7 +170,7 @@
 
         function renderFrame(frame) {
             if (frame.error) {
-                document.getElementById('canvas').textContent = 'Error: ' + frame.error;
+                document.getElementById('canvas-content').textContent = 'Error: ' + frame.error;
                 return;
             }
 
@@ -187,7 +195,7 @@
                 }
                 html += '\n';
             }
-            document.getElementById('canvas').innerHTML = html;
+            document.getElementById('canvas-content').innerHTML = html;
 
             // Update location
             document.getElementById('location').textContent = frame.location || '';
