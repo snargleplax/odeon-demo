@@ -37,6 +37,9 @@
             border-radius: 8px;
             padding: 10px;
             background: #0d0d1a;
+            width: 700px;
+            height: 400px;
+            overflow: auto;
         }
         #info-panel {
             height: 60px;
@@ -149,41 +152,11 @@
             return `rgb(${gray},${gray},${gray})`;
         }
 
-        function calculateFontSize(width, height) {
-            // Reserve space for UI elements (title, info panel, actions, controls, footer)
-            const uiHeight = 300;
-            const uiWidth = 100;
-            const availableWidth = window.innerWidth - uiWidth;
-            const availableHeight = window.innerHeight - uiHeight;
-
-            if (width === 0 || height === 0) return 14;
-
-            // Approximate character dimensions at 14px font
-            const charWidth = 8.4;  // Courier New at 14px
-            const charHeight = 14;
-
-            // Calculate max font size that fits
-            const maxFontByWidth = (availableWidth / width) * (14 / charWidth);
-            const maxFontByHeight = (availableHeight / height) * (14 / charHeight);
-            let fontSize = Math.min(maxFontByWidth, maxFontByHeight);
-
-            // Clamp to reasonable range
-            if (fontSize < 10) fontSize = 10;
-            if (fontSize > 32) fontSize = 32;
-
-            return Math.floor(fontSize);
-        }
-
         function renderFrame(frame) {
             if (frame.error) {
                 document.getElementById('canvas').textContent = 'Error: ' + frame.error;
                 return;
             }
-
-            // Calculate and apply font size based on available space
-            const fontSize = calculateFontSize(frame.width, frame.height);
-            document.getElementById('canvas').style.fontSize = fontSize + 'px';
-            document.getElementById('canvas').style.lineHeight = '1.0';
 
             // Render canvas with colors
             let html = '';
