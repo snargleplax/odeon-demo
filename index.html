@@ -101,7 +101,7 @@
             font-size: clamp(11px, 2vw, 14px);
         }
         #controls {
-            margin-top: 20px;
+            margin: 10px 0;
             display: flex;
             gap: 10px;
             flex-shrink: 0;
@@ -150,9 +150,6 @@
                 max-height: 40px;
                 flex-shrink: 0;
             }
-            #controls {
-                margin-top: 10px;
-            }
         }
     </style>
 </head>
@@ -161,6 +158,10 @@
     <div id="loading">Loading WASM...</div>
     <div id="stage-container">
         <div id="canvas"><div id="canvas-content"></div></div>
+        <div id="controls">
+            <button id="act-btn" class="control-btn" onclick="act()">Act</button>
+            <button id="new-story" class="control-btn" onclick="startNewStory()">New Story</button>
+        </div>
         <div id="info-panel">
             <div id="location"></div>
             <div id="characters"></div>
@@ -169,10 +170,6 @@
         <div id="actions">
             <h3>Available Actions:</h3>
             <div id="action-list"></div>
-        </div>
-        <div id="controls">
-            <button id="act-btn" class="control-btn" onclick="act()">Act</button>
-            <button id="new-story" class="control-btn" onclick="startNewStory()">New Story</button>
         </div>
     </div>
     <div id="footer"></div>
