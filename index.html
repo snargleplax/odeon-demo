@@ -37,7 +37,7 @@
         }
         #canvas {
             font-family: 'Courier New', monospace;
-            font-size: 18px;
+            font-size: clamp(10px, 2.5vw, 18px);
             line-height: 1.0;
             white-space: pre;
             border: 2px solid #63b3ed;
@@ -50,12 +50,14 @@
             max-width: 100%;
             box-sizing: border-box;
             overflow: auto;
+            -webkit-overflow-scrolling: touch;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         #canvas-content {
             text-align: left;
+            display: inline-block;
         }
         #info-panel {
             height: 60px;
@@ -66,7 +68,7 @@
         }
         #location {
             color: #e94560;
-            font-size: 18px;
+            font-size: clamp(14px, 2.5vw, 18px);
         }
         #characters {
             color: #4ecdc4;
@@ -75,7 +77,7 @@
         #events {
             color: #00d9ff;
             font-style: italic;
-            font-size: 14px;
+            font-size: clamp(11px, 2vw, 14px);
             margin-top: 10px;
             text-align: left;
             max-height: 80px;
@@ -92,12 +94,12 @@
         #actions h3 {
             color: #888;
             margin: 0 0 10px 0;
-            font-size: 14px;
+            font-size: clamp(11px, 2vw, 14px);
         }
         .action-item {
             color: #aaa;
             padding: 4px 0;
-            font-size: 14px;
+            font-size: clamp(11px, 2vw, 14px);
         }
         #controls {
             margin-top: 20px;
@@ -109,7 +111,7 @@
             color: white;
             border: none;
             padding: 10px 20px;
-            font-size: 14px;
+            font-size: clamp(12px, 2vw, 14px);
             cursor: pointer;
             font-family: 'Courier New', monospace;
             border-radius: 4px;
@@ -181,6 +183,27 @@
             return `rgb(${gray},${gray},${gray})`;
         }
 
+        function scrollToPlayer(frame) {
+            if (frame.playerX === undefined) return;
+            const canvas = document.getElementById('canvas');
+            const content = document.getElementById('canvas-content');
+
+            // Calculate pixel position (monospace char width ~= font-size * 0.6)
+            const fontSize = parseFloat(getComputedStyle(content).fontSize);
+            const charWidth = fontSize * 0.6;
+            const charHeight = fontSize;
+
+            const targetX = frame.playerX * charWidth;
+            const targetY = frame.playerY * charHeight;
+
+            // Scroll to center player in view
+            canvas.scrollTo({
+                left: targetX - canvas.clientWidth / 2,
+                top: targetY - canvas.clientHeight / 2,
+                behavior: 'smooth'
+            });
+        }
+
         function renderFrame(frame) {
             if (frame.error) {
                 document.getElementById('canvas-content').textContent = 'Error: ' + frame.error;
@@ -249,6 +272,9 @@
 
             // Enable/disable Act button based on available actions
             document.getElementById('act-btn').disabled = currentActions.length === 0;
+
+            // Scroll to keep player visible
+            scrollToPlayer(frame);
         }
 
         let animating = false;
