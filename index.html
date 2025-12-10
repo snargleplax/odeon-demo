@@ -72,6 +72,18 @@
             color: #4ecdc4;
             font-style: italic;
         }
+        #events {
+            color: #00d9ff;
+            font-style: italic;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: left;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+        .event-item {
+            padding: 2px 0;
+        }
         #actions {
             margin-top: 15px;
             text-align: left;
@@ -125,6 +137,7 @@
             <div id="location"></div>
             <div id="characters"></div>
         </div>
+        <div id="events"></div>
         <div id="actions">
             <h3>Available Actions:</h3>
             <div id="action-list"></div>
@@ -205,6 +218,18 @@
                 document.getElementById('characters').textContent = frame.characters.join(', ') + ' is here';
             } else {
                 document.getElementById('characters').textContent = '';
+            }
+
+            // Update events
+            const eventsDiv = document.getElementById('events');
+            eventsDiv.innerHTML = '';
+            if (frame.events && frame.events.length > 0) {
+                for (const event of frame.events) {
+                    const item = document.createElement('div');
+                    item.className = 'event-item';
+                    item.textContent = event;
+                    eventsDiv.appendChild(item);
+                }
             }
 
             // Update actions (static display)
