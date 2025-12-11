@@ -56,7 +56,6 @@
             text-align: left;
             display: inline-block;
             min-width: max-content;
-            margin: auto;
         }
         #info-panel {
             height: 60px;
@@ -214,13 +213,18 @@
             const canvas = document.getElementById('canvas');
             const content = document.getElementById('canvas-content');
 
+            // Add padding so player can be centered even at edges/small maps
+            const padX = canvas.clientWidth / 2;
+            const padY = canvas.clientHeight / 2;
+            content.style.padding = `${padY}px ${padX}px`;
+
             // Calculate pixel position (monospace char width ~= font-size * 0.6)
             const fontSize = parseFloat(getComputedStyle(content).fontSize);
             const charWidth = fontSize * 0.6;
             const charHeight = fontSize;
 
-            const targetX = frame.playerX * charWidth;
-            const targetY = frame.playerY * charHeight;
+            const targetX = frame.playerX * charWidth + padX;
+            const targetY = frame.playerY * charHeight + padY;
 
             // Scroll to center player in view
             canvas.scrollTo({
