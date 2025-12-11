@@ -180,6 +180,7 @@
     <script>
         const go = new Go();
         let currentActions = [];
+        let buildInfo = null;
 
         function ansiToHex(ansi) {
             // Basic 256-color ANSI to hex conversion
@@ -340,7 +341,7 @@
                     const frame = JSON.parse(animStep(step));
                     renderFrame(frame);
                     step++;
-                    setTimeout(animateStep, 100);
+                    setTimeout(animateStep, buildInfo.animStepMs);
                 } else {
                     // Animation complete
                     const frame = JSON.parse(finishMove());
@@ -366,9 +367,8 @@
             // Start a new story
             startNewStory();
 
-            // Display build info
-            const buildInfoJson = getBuildInfo();
-            const buildInfo = JSON.parse(buildInfoJson);
+            // Load build info
+            buildInfo = JSON.parse(getBuildInfo());
             const shortSHA = buildInfo.gitSHA.substring(0, 7);
             document.getElementById('footer').textContent = shortSHA;
         }).catch(err => {
