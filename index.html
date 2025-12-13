@@ -209,12 +209,12 @@
             return `rgb(${gray},${gray},${gray})`;
         }
 
-        function scrollToPlayer(frame) {
-            if (frame.playerX === undefined) return;
+        function scrollToActiveChar(frame) {
+            if (frame.activeX === undefined) return;
             const canvas = document.getElementById('canvas');
             const content = document.getElementById('canvas-content');
 
-            // Add padding so player can be centered even at edges/small maps
+            // Add padding so active character can be centered even at edges/small maps
             const padX = canvas.clientWidth / 2;
             const padY = canvas.clientHeight / 2;
             content.style.padding = `${padY}px ${padX}px`;
@@ -224,10 +224,10 @@
             const charWidth = fontSize * 0.6;
             const charHeight = fontSize;
 
-            const targetX = frame.playerX * charWidth + padX;
-            const targetY = frame.playerY * charHeight + padY;
+            const targetX = frame.activeX * charWidth + padX;
+            const targetY = frame.activeY * charHeight + padY;
 
-            // Scroll to center player in view
+            // Scroll to center active character in view
             canvas.scrollTo({
                 left: targetX - canvas.clientWidth / 2,
                 top: targetY - canvas.clientHeight / 2,
@@ -304,8 +304,8 @@
             // Enable/disable Act button based on available actions
             document.getElementById('act-btn').disabled = currentActions.length === 0;
 
-            // Scroll to keep player visible
-            scrollToPlayer(frame);
+            // Scroll to keep active character visible
+            scrollToActiveChar(frame);
         }
 
         let animating = false;
