@@ -35,6 +35,38 @@
             width: 100%;
             max-width: 900px;
         }
+        #main-area {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+        }
+        #sidebar {
+            width: 150px;
+            flex-shrink: 0;
+            font-size: clamp(11px, 2vw, 14px);
+        }
+        #sidebar h3 {
+            color: #888;
+            margin: 0 0 5px 0;
+            font-size: clamp(11px, 2vw, 14px);
+            font-weight: bold;
+        }
+        #sidebar-characters {
+            margin-bottom: 15px;
+        }
+        .sidebar-item {
+            padding: 2px 0;
+            color: #aaa;
+        }
+        .sidebar-item.unknown {
+            color: #555;
+        }
+        .sidebar-item .symbol {
+            margin-right: 5px;
+        }
         #canvas {
             font-family: 'Courier New', monospace;
             font-size: clamp(10px, 2.5vw, 18px);
@@ -190,6 +222,9 @@
             #actions {
                 display: none;
             }
+            #sidebar {
+                display: none;
+            }
             #info-panel {
                 height: auto;
                 padding: 5px 0;
@@ -206,7 +241,19 @@
     <h1>ODEON</h1>
     <div id="loading">Loading WASM...</div>
     <div id="stage-container">
-        <div id="canvas"><div id="canvas-content"></div></div>
+        <div id="main-area">
+            <div id="sidebar">
+                <div id="sidebar-characters">
+                    <h3>Characters</h3>
+                    <div id="character-list"></div>
+                </div>
+                <div id="sidebar-locations">
+                    <h3>Locations</h3>
+                    <div id="location-list"></div>
+                </div>
+            </div>
+            <div id="canvas"><div id="canvas-content"></div></div>
+        </div>
         <div id="controls">
             <button class="control-btn" onclick="moveSelectionUp()">▲</button>
             <button class="control-btn" onclick="moveSelectionDown()">▼</button>
@@ -356,6 +403,35 @@
                 document.getElementById('goals').style.display = 'block';
             } else {
                 document.getElementById('goals').style.display = 'none';
+            }
+
+            // Update sidebar characters
+            const charList = document.getElementById('character-list');
+            charList.innerHTML = '';
+            if (frame.sidebarCharacters) {
+                for (const char of frame.sidebarCharacters) {
+                    const item = document.createElement('div');
+                    item.className = 'sidebar-item' + (char.isKnown ? '' : ' unknown');
+                    const symbol = document.createElement('span');
+                    symbol.className = 'symbol';
+                    symbol.textContent = '@';
+                    symbol.style.color = ansiToHex(char.color) || '#888';
+                    item.appendChild(symbol);
+                    item.appendChild(document.createTextNode(char.name));
+                    charList.appendChild(item);
+                }
+            }
+
+            // Update sidebar locations
+            const locList = document.getElementById('location-list');
+            locList.innerHTML = '';
+            if (frame.sidebarLocations) {
+                for (const loc of frame.sidebarLocations) {
+                    const item = document.createElement('div');
+                    item.className = 'sidebar-item' + (loc.isKnown ? '' : ' unknown');
+                    item.textContent = loc.name;
+                    locList.appendChild(item);
+                }
             }
 
             // Update actions with selection highlighting
