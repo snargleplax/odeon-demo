@@ -171,11 +171,10 @@
             cursor: not-allowed;
         }
         #footer {
-            position: fixed;
-            bottom: 5px;
-            right: 10px;
             color: #555;
             font-size: 10px;
+            text-align: center;
+            margin-top: 10px;
         }
         @media (max-width: 600px) {
             body {
@@ -213,6 +212,7 @@
             <button class="control-btn" onclick="moveSelectionDown()">▼</button>
             <button id="act-btn" class="control-btn" onclick="executeSelected()">Act</button>
             <button class="control-btn" onclick="actRandom()">Random</button>
+            <button id="auto-btn" class="control-btn" onclick="toggleAutoplay()">Auto</button>
             <button class="control-btn" onclick="startNewStory()">New</button>
         </div>
         <div id="current-action"></div>
@@ -229,8 +229,8 @@
             <h3>Available Actions:</h3>
             <div id="action-list"></div>
         </div>
+        <div id="footer"></div>
     </div>
-    <div id="footer"></div>
 
     <script src="wasm_exec.js"></script>
     <script>
@@ -384,6 +384,7 @@
         }
 
         let animating = false;
+        let autoplay = false;
 
         function moveSelectionUp() {
             if (animating || currentActions.length === 0) return;
@@ -418,6 +419,65 @@
             const randomIndex = Math.floor(Math.random() * currentActions.length);
             const action = currentActions[randomIndex];
             executeAction(action);
+        }
+
+        function toggleAutoplay() {
+            autoplay = !autoplay;
+            document.getElementById('auto-btn').textContent = autoplay ? 'Stop' : 'Auto';
+            if (autoplay && !animating) {
+                doAutoplay();
+            }
+        }
+
+        function doAutoplay() {
+            if (!autoplay || animating) return;
+
+            const moveResult = JSON.parse(randomAction());
+            if (moveResult.error) {
+                // No actions available, stop autoplay
+                autoplay = false;
+                document.getElementById('auto-btn').textContent = 'Auto';
+                return;
+            }
+
+            // Get current frame to show the action label
+            const frame = JSON.parse(getFrame());
+            if (frame.actions && frame.actions.length > 0) {
+                // Show a generic message since randomAction already executed
+                document.getElementById('current-action').textContent = '(autoplay)';
+            }
+
+            if (moveResult.pathLength === 0) {
+                // No animation, continue after delay
+                renderFrame(JSON.parse(finishMove()));
+                setTimeout(doAutoplay, 500);
+                return;
+            }
+
+            // Animate through the path
+            animating = true;
+            document.getElementById('act-btn').disabled = true;
+            let step = 0;
+            const pathLength = moveResult.pathLength;
+
+            function animateStep() {
+                if (step < pathLength) {
+                    const frame = JSON.parse(animStep(step));
+                    renderFrame(frame);
+                    step++;
+                    setTimeout(animateStep, buildInfo.animStepMs);
+                } else {
+                    // Animation complete
+                    const frame = JSON.parse(finishMove());
+                    renderFrame(frame);
+                    animating = false;
+                    if (autoplay) {
+                        doAutoplay();
+                    }
+                }
+            }
+
+            animateStep();
         }
 
         function executeAction(action) {
@@ -461,6 +521,8 @@
         }
 
         function startNewStory() {
+            autoplay = false;
+            document.getElementById('auto-btn').textContent = 'Auto';
             document.getElementById('current-action').textContent = '';
             const seed = Date.now();
             const result = newPlay(seed);
@@ -496,6 +558,8 @@
                     actRandom();
                 } else if (e.key === 'r' || e.key === 'R') {
                     startNewStory();
+                } else if (e.key === 'a' || e.key === 'A') {
+                    toggleAutoplay();
                 }
             });
         }).catch(err => {
