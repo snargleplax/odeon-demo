@@ -440,13 +440,6 @@
                 return;
             }
 
-            // Get current frame to show the action label
-            const frame = JSON.parse(getFrame());
-            if (frame.actions && frame.actions.length > 0) {
-                // Show a generic message since randomAction already executed
-                document.getElementById('current-action').textContent = '(autoplay)';
-            }
-
             if (moveResult.pathLength === 0) {
                 // No animation, continue after delay
                 renderFrame(JSON.parse(finishMove()));
