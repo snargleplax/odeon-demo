@@ -84,6 +84,30 @@
         .event-item {
             padding: 2px 0;
         }
+        #goals {
+            color: #ffa500;
+            font-size: clamp(11px, 2vw, 14px);
+            margin-top: 10px;
+            text-align: left;
+        }
+        #goals h3 {
+            color: #888;
+            margin: 0 0 5px 0;
+            font-size: clamp(11px, 2vw, 14px);
+        }
+        .goal-item {
+            padding: 2px 0;
+        }
+        .goal-item.satisfied {
+            color: #4ecdc4;
+            text-decoration: line-through;
+        }
+        .goal-item::before {
+            content: '○ ';
+        }
+        .goal-item.satisfied::before {
+            content: '✓ ';
+        }
         #actions {
             margin-top: 15px;
             text-align: left;
@@ -197,6 +221,10 @@
             <div id="characters"></div>
         </div>
         <div id="events"></div>
+        <div id="goals">
+            <h3>Goals:</h3>
+            <div id="goal-list"></div>
+        </div>
         <div id="actions">
             <h3>Available Actions:</h3>
             <div id="action-list"></div>
@@ -313,6 +341,21 @@
                     item.textContent = event;
                     eventsDiv.appendChild(item);
                 }
+            }
+
+            // Update goals
+            const goalList = document.getElementById('goal-list');
+            goalList.innerHTML = '';
+            if (frame.goals && frame.goals.length > 0) {
+                for (const goal of frame.goals) {
+                    const item = document.createElement('div');
+                    item.className = 'goal-item' + (goal.satisfied ? ' satisfied' : '');
+                    item.textContent = goal.description;
+                    goalList.appendChild(item);
+                }
+                document.getElementById('goals').style.display = 'block';
+            } else {
+                document.getElementById('goals').style.display = 'none';
             }
 
             // Update actions with selection highlighting
