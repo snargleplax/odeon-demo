@@ -440,6 +440,8 @@
                 return;
             }
 
+            document.getElementById('current-action').textContent = moveResult.actionLabel;
+
             if (moveResult.pathLength === 0) {
                 // No animation, continue after delay
                 renderFrame(JSON.parse(finishMove()));
