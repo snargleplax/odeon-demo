@@ -96,8 +96,32 @@
         }
         .action-item {
             color: #aaa;
-            padding: 4px 0;
+            padding: 4px 8px;
             font-size: clamp(11px, 2vw, 14px);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .action-item:hover {
+            background: #2a2a4e;
+        }
+        .action-item.selected {
+            color: #ffcc00;
+            background: #2a2a4e;
+        }
+        .action-item.selected::before {
+            content: '▶ ';
+        }
+        #current-action {
+            color: #ffcc00;
+            font-weight: bold;
+            padding: 8px 16px;
+            border: 2px solid #ffcc00;
+            border-radius: 8px;
+            margin: 5px 0;
+            min-height: 20px;
+        }
+        #current-action:empty {
+            display: none;
         }
         #controls {
             margin: 10px 0;
@@ -161,9 +185,13 @@
     <div id="stage-container">
         <div id="canvas"><div id="canvas-content"></div></div>
         <div id="controls">
-            <button id="act-btn" class="control-btn" onclick="act()">Act</button>
-            <button id="new-story" class="control-btn" onclick="startNewStory()">New Story</button>
+            <button class="control-btn" onclick="moveSelectionUp()">▲</button>
+            <button class="control-btn" onclick="moveSelectionDown()">▼</button>
+            <button id="act-btn" class="control-btn" onclick="executeSelected()">Act</button>
+            <button class="control-btn" onclick="actRandom()">Random</button>
+            <button class="control-btn" onclick="startNewStory()">New</button>
         </div>
+        <div id="current-action"></div>
         <div id="info-panel">
             <div id="location"></div>
             <div id="characters"></div>
@@ -180,6 +208,7 @@
     <script>
         const go = new Go();
         let currentActions = [];
+        let selectedIndex = 0;
         let buildInfo = null;
 
         function ansiToHex(ansi) {
@@ -286,15 +315,18 @@
                 }
             }
 
-            // Update actions (static display)
+            // Update actions with selection highlighting
             currentActions = frame.actions || [];
+            selectedIndex = frame.selectedIndex || 0;
             const actionList = document.getElementById('action-list');
             actionList.innerHTML = '';
             if (currentActions.length > 0) {
-                for (const action of currentActions) {
+                for (let i = 0; i < currentActions.length; i++) {
+                    const action = currentActions[i];
                     const item = document.createElement('div');
-                    item.className = 'action-item';
-                    item.textContent = '• ' + action.label;
+                    item.className = 'action-item' + (i === selectedIndex ? ' selected' : '');
+                    item.textContent = action.label;
+                    item.onclick = () => selectAction(i);
                     actionList.appendChild(item);
                 }
             } else {
@@ -310,12 +342,44 @@
 
         let animating = false;
 
-        function act() {
-            if (currentActions.length === 0 || animating) return;
+        function moveSelectionUp() {
+            if (animating || currentActions.length === 0) return;
+            renderFrame(JSON.parse(selectUp()));
+        }
 
-            // Pick a random action
+        function moveSelectionDown() {
+            if (animating || currentActions.length === 0) return;
+            renderFrame(JSON.parse(selectDown()));
+        }
+
+        function selectAction(index) {
+            if (animating) return;
+            // Click to select, then user can press Act
+            while (selectedIndex !== index) {
+                if (selectedIndex < index) {
+                    renderFrame(JSON.parse(selectDown()));
+                } else {
+                    renderFrame(JSON.parse(selectUp()));
+                }
+            }
+        }
+
+        function executeSelected() {
+            if (currentActions.length === 0 || animating) return;
+            const action = currentActions[selectedIndex];
+            executeAction(action);
+        }
+
+        function actRandom() {
+            if (currentActions.length === 0 || animating) return;
             const randomIndex = Math.floor(Math.random() * currentActions.length);
             const action = currentActions[randomIndex];
+            executeAction(action);
+        }
+
+        function executeAction(action) {
+            // Show what action is being taken
+            document.getElementById('current-action').textContent = action.label;
 
             // Start the move and get path length
             const moveResult = JSON.parse(startMove(action.index));
@@ -354,6 +418,7 @@
         }
 
         function startNewStory() {
+            document.getElementById('current-action').textContent = '';
             const seed = Date.now();
             const result = newPlay(seed);
             renderFrame(JSON.parse(result));
@@ -371,6 +436,25 @@
             buildInfo = JSON.parse(getBuildInfo());
             const shortSHA = buildInfo.gitSHA.substring(0, 7);
             document.getElementById('footer').textContent = shortSHA;
+
+            // Keyboard handlers
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    moveSelectionUp();
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    moveSelectionDown();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    executeSelected();
+                } else if (e.key === ' ') {
+                    e.preventDefault();
+                    actRandom();
+                } else if (e.key === 'r' || e.key === 'R') {
+                    startNewStory();
+                }
+            });
         }).catch(err => {
             document.getElementById('loading').textContent = 'Error loading WASM: ' + err;
         });
