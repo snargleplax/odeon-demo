@@ -455,7 +455,7 @@
                 } else {
                     // Fade from bright green (oldest) to dimmer green
                     const fadeLevel = len > 1 ? (i + 1) / (len - 1) : 1;
-                    const brightness = Math.floor(100 + fadeLevel * 100);
+                    const brightness = Math.floor(60 + fadeLevel * 140);
                     entry.style.color = `rgb(0, ${brightness}, ${Math.floor(brightness / 4)})`;
                 }
                 container.appendChild(entry);
