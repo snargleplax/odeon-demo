@@ -475,9 +475,9 @@
                     entry.style.fontWeight = 'bold';
                 } else {
                     // Fade based on distance from current (yellow) entry
-                    // Fixed step size: 40 per position for clear visual distinction
-                    // Distance 1 = brightest (255), distance 7 = dimmest (15)
-                    const maxBright = 255, step = 40;
+                    // Fixed step size: 32 per position to fit 7 values in visible range
+                    // Distance 1 = brightest (255), distance 7 = dimmest (63)
+                    const maxBright = 255, step = 32;
                     const distance = len - 1 - i; // 1 = closest to yellow
                     let brightness = maxBright - (distance - 1) * step;
                     if (brightness < 60) brightness = 60;
