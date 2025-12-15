@@ -104,17 +104,23 @@
             color: #4ecdc4;
             font-style: italic;
         }
-        #events {
-            color: #00d9ff;
-            font-style: italic;
-            font-size: clamp(11px, 2vw, 14px);
-            margin-top: 10px;
-            text-align: left;
-            max-height: 80px;
-            overflow-y: auto;
+        #event-log {
+            font-size: clamp(12px, 2vw, 16px);
+            margin: 10px 0;
+            text-align: center;
+            width: 100%;
+            height: 5.5em;
+            line-height: 1.1em;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow: hidden;
         }
-        .event-item {
-            padding: 2px 0;
+        .log-entry {
+            padding: 1px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         #goals {
             color: #ffa500;
@@ -167,18 +173,6 @@
         .action-item.selected::before {
             content: '▶ ';
         }
-        #current-action {
-            color: #ffcc00;
-            font-weight: bold;
-            padding: 8px 16px;
-            border: 2px solid #ffcc00;
-            border-radius: 8px;
-            margin: 5px 0;
-            min-height: 20px;
-        }
-        #current-action:empty {
-            display: none;
-        }
         #controls {
             margin: 10px 0;
             display: flex;
@@ -230,10 +224,6 @@
                 padding: 5px 0;
                 flex-shrink: 0;
             }
-            #events {
-                max-height: 40px;
-                flex-shrink: 0;
-            }
         }
     </style>
 </head>
@@ -262,12 +252,11 @@
             <button id="auto-btn" class="control-btn" onclick="toggleAutoplay()">Auto</button>
             <button class="control-btn" onclick="startNewStory()">New</button>
         </div>
-        <div id="current-action"></div>
+        <div id="event-log"></div>
         <div id="info-panel">
             <div id="location"></div>
             <div id="characters"></div>
         </div>
-        <div id="events"></div>
         <div id="goals">
             <h3>Goals:</h3>
             <div id="goal-list"></div>
@@ -378,15 +367,10 @@
                 document.getElementById('characters').textContent = '';
             }
 
-            // Update events
-            const eventsDiv = document.getElementById('events');
-            eventsDiv.innerHTML = '';
+            // Add frame events to log
             if (frame.events && frame.events.length > 0) {
                 for (const event of frame.events) {
-                    const item = document.createElement('div');
-                    item.className = 'event-item';
-                    item.textContent = event;
-                    eventsDiv.appendChild(item);
+                    addLogEntry(event);
                 }
             }
 
@@ -461,6 +445,39 @@
 
         let animating = false;
         let autoplay = false;
+        let eventLog = [];
+        const MAX_LOG_ENTRIES = 5;
+
+        function addLogEntry(message) {
+            if (!message) return;
+            eventLog.push(message);
+            if (eventLog.length > MAX_LOG_ENTRIES) {
+                eventLog.shift();
+            }
+            renderEventLog();
+        }
+
+        function renderEventLog() {
+            const container = document.getElementById('event-log');
+            container.innerHTML = '';
+            const len = eventLog.length;
+            for (let i = 0; i < len; i++) {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.textContent = eventLog[i];
+                // Newest (last) is yellow and bold, others fade from bright to dim green
+                if (i === len - 1) {
+                    entry.style.color = '#ffcc00';
+                    entry.style.fontWeight = 'bold';
+                } else {
+                    // Fade from bright green (oldest) to dimmer green
+                    const fadeLevel = (i + 1) / (len - 1); // 0 = oldest, 1 = second newest
+                    const brightness = Math.floor(100 + fadeLevel * 100); // 100-200 range
+                    entry.style.color = `rgb(0, ${brightness}, ${Math.floor(brightness * 0.8)})`;
+                }
+                container.appendChild(entry);
+            }
+        }
 
         function moveSelectionUp() {
             if (animating || currentActions.length === 0) return;
@@ -516,7 +533,7 @@
                 return;
             }
 
-            document.getElementById('current-action').textContent = moveResult.actionLabel;
+            addLogEntry(moveResult.actionLabel);
 
             if (moveResult.pathLength === 0) {
                 // No animation, continue after delay
@@ -553,7 +570,7 @@
 
         function executeAction(action) {
             // Show what action is being taken
-            document.getElementById('current-action').textContent = action.label;
+            addLogEntry(action.label);
 
             // Start the move and get path length
             const moveResult = JSON.parse(startMove(action.index));
@@ -594,7 +611,8 @@
         function startNewStory() {
             autoplay = false;
             document.getElementById('auto-btn').textContent = 'Auto';
-            document.getElementById('current-action').textContent = '';
+            eventLog = [];
+            renderEventLog();
             const seed = Date.now();
             const result = newPlay(seed);
             renderFrame(JSON.parse(result));
