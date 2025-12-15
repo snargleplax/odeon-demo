@@ -475,12 +475,11 @@
                     entry.style.fontWeight = 'bold';
                 } else {
                     // Fade based on distance from current (yellow) entry
-                    // Fixed step size: 32 per position to fit 7 values in visible range
-                    // Distance 1 = brightest (255), distance 7 = dimmest (63)
-                    const maxBright = 255, step = 32;
+                    // Fixed step size: 35 per position
+                    // Distance 1 = brightest (255), distance 7 = dimmest (45)
+                    const maxBright = 255, step = 35;
                     const distance = len - 1 - i; // 1 = closest to yellow
-                    let brightness = maxBright - (distance - 1) * step;
-                    if (brightness < 40) brightness = 40;
+                    const brightness = maxBright - (distance - 1) * step;
                     entry.style.color = `rgb(0, ${brightness}, 0)`;
                 }
                 container.appendChild(entry);
