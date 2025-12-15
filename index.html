@@ -367,12 +367,8 @@
                 document.getElementById('characters').textContent = '';
             }
 
-            // Add frame events to log
-            if (frame.events && frame.events.length > 0) {
-                for (const event of frame.events) {
-                    addLogEntry(event);
-                }
-            }
+            // Render event log from frame
+            renderEventLog(frame.eventLog || []);
 
             // Update goals
             const goalList = document.getElementById('goal-list');
@@ -445,34 +441,23 @@
 
         let animating = false;
         let autoplay = false;
-        let eventLog = [];
-        const MAX_LOG_ENTRIES = 5;
 
-        function addLogEntry(message) {
-            if (!message) return;
-            eventLog.push(message);
-            if (eventLog.length > MAX_LOG_ENTRIES) {
-                eventLog.shift();
-            }
-            renderEventLog();
-        }
-
-        function renderEventLog() {
+        function renderEventLog(log) {
             const container = document.getElementById('event-log');
             container.innerHTML = '';
-            const len = eventLog.length;
+            const len = log.length;
             for (let i = 0; i < len; i++) {
                 const entry = document.createElement('div');
                 entry.className = 'log-entry';
-                entry.textContent = eventLog[i];
+                entry.textContent = log[i];
                 // Newest (last) is yellow and bold, others fade from bright to dim green
                 if (i === len - 1) {
                     entry.style.color = '#ffcc00';
                     entry.style.fontWeight = 'bold';
                 } else {
                     // Fade from bright green (oldest) to dimmer green
-                    const fadeLevel = (i + 1) / (len - 1); // 0 = oldest, 1 = second newest
-                    const brightness = Math.floor(100 + fadeLevel * 100); // 100-200 range
+                    const fadeLevel = len > 1 ? (i + 1) / (len - 1) : 1;
+                    const brightness = Math.floor(100 + fadeLevel * 100);
                     entry.style.color = `rgb(0, ${brightness}, ${Math.floor(brightness * 0.8)})`;
                 }
                 container.appendChild(entry);
@@ -533,8 +518,6 @@
                 return;
             }
 
-            addLogEntry(moveResult.actionLabel);
-
             if (moveResult.pathLength === 0) {
                 // No animation, continue after delay
                 renderFrame(JSON.parse(finishMove()));
@@ -569,9 +552,6 @@
         }
 
         function executeAction(action) {
-            // Show what action is being taken
-            addLogEntry(action.label);
-
             // Start the move and get path length
             const moveResult = JSON.parse(startMove(action.index));
             if (moveResult.error) {
@@ -611,8 +591,6 @@
         function startNewStory() {
             autoplay = false;
             document.getElementById('auto-btn').textContent = 'Auto';
-            eventLog = [];
-            renderEventLog();
             const seed = Date.now();
             const result = newPlay(seed);
             renderFrame(JSON.parse(result));
