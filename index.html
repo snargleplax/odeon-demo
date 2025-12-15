@@ -458,21 +458,25 @@
         function renderEventLog(log) {
             const container = document.getElementById('event-log');
             container.innerHTML = '';
-            const len = log.length;
+            // Only render visible entries (approximately 8 fit in the viewport)
+            const visibleCount = 8;
+            const startIdx = Math.max(0, log.length - visibleCount);
+            const visibleLog = log.slice(startIdx);
+            const len = visibleLog.length;
             for (let i = 0; i < len; i++) {
                 const entry = document.createElement('div');
                 entry.className = 'log-entry';
                 // Use present tense for newest entry, past tense for older
                 const isNewest = i === len - 1;
-                entry.textContent = isNewest ? log[i].present : log[i].past;
+                entry.textContent = isNewest ? visibleLog[i].present : visibleLog[i].past;
                 // Newest (last) is yellow and bold, others fade from bright to dim green
                 if (isNewest) {
                     entry.style.color = '#ffcc00';
                     entry.style.fontWeight = 'bold';
                 } else {
                     // Fade based on distance from current (yellow) entry
-                    // Spread evenly from 200 (closest to yellow) to 40 (farthest)
-                    const maxBright = 200, minBright = 40;
+                    // Spread evenly from 200 (closest to yellow) to 80 (farthest visible)
+                    const maxBright = 200, minBright = 80;
                     const numPast = len - 1;
                     const distance = len - 1 - i; // 1 = closest to yellow
                     let brightness;
