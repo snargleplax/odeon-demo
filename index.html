@@ -103,23 +103,26 @@
             color: #e94560;
             font-size: clamp(14px, 2.5vw, 18px);
         }
+        #actions-and-log {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            margin-top: 10px;
+            width: 100%;
+        }
         #event-log {
             font-size: clamp(12px, 2vw, 16px);
-            margin: 10px 0;
-            text-align: center;
-            width: 100%;
-            height: 5.5em;
-            line-height: 1.1em;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            overflow: hidden;
+            text-align: left;
+            flex: 1;
+            height: 150px;
+            line-height: 1.3em;
+            overflow-y: auto;
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 8px;
         }
         .log-entry {
-            padding: 1px 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            padding: 2px 0;
         }
         #goals {
             color: #ffa500;
@@ -146,13 +149,17 @@
             content: '✓ ';
         }
         #actions {
-            margin-top: 15px;
             text-align: left;
-            height: 120px;
+            min-width: 200px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            padding: 8px;
         }
         #actions h3 {
             color: #888;
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0;
             font-size: clamp(11px, 2vw, 14px);
         }
         .action-item {
@@ -212,8 +219,14 @@
             #canvas {
                 max-height: 66vh;
             }
+            #actions-and-log {
+                flex-direction: column;
+            }
             #actions {
                 display: none;
+            }
+            #event-log {
+                height: 80px;
             }
             #sidebar {
                 display: none;
@@ -251,7 +264,6 @@
             <button id="auto-btn" class="control-btn" onclick="toggleAutoplay()">Auto</button>
             <button class="control-btn" onclick="startNewStory()">New</button>
         </div>
-        <div id="event-log"></div>
         <div id="info-panel">
             <div id="location"></div>
         </div>
@@ -259,9 +271,12 @@
             <h3>Goals:</h3>
             <div id="goal-list"></div>
         </div>
-        <div id="actions">
-            <h3>Available Actions:</h3>
-            <div id="action-list"></div>
+        <div id="actions-and-log">
+            <div id="actions">
+                <h3>Actions:</h3>
+                <div id="action-list"></div>
+            </div>
+            <div id="event-log"></div>
         </div>
         <div id="footer"></div>
     </div>
@@ -460,6 +475,8 @@
                 }
                 container.appendChild(entry);
             }
+            // Auto-scroll to bottom
+            container.scrollTop = container.scrollHeight;
         }
 
         function moveSelectionUp() {
