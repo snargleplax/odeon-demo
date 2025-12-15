@@ -462,16 +462,27 @@
             for (let i = 0; i < len; i++) {
                 const entry = document.createElement('div');
                 entry.className = 'log-entry';
-                entry.textContent = log[i];
+                // Use present tense for newest entry, past tense for older
+                const isNewest = i === len - 1;
+                entry.textContent = isNewest ? log[i].present : log[i].past;
                 // Newest (last) is yellow and bold, others fade from bright to dim green
-                if (i === len - 1) {
+                if (isNewest) {
                     entry.style.color = '#ffcc00';
                     entry.style.fontWeight = 'bold';
                 } else {
-                    // Fade from bright green (oldest) to dimmer green
-                    const fadeLevel = len > 1 ? (i + 1) / (len - 1) : 1;
-                    const brightness = Math.floor(60 + fadeLevel * 140);
-                    entry.style.color = `rgb(0, ${brightness}, ${Math.floor(brightness / 4)})`;
+                    // Fade based on distance from current (yellow) entry
+                    // Spread evenly from 200 (closest to yellow) to 40 (farthest)
+                    const maxBright = 200, minBright = 40;
+                    const numPast = len - 1;
+                    const distance = len - 1 - i; // 1 = closest to yellow
+                    let brightness;
+                    if (numPast === 1) {
+                        brightness = maxBright;
+                    } else {
+                        // Linear interpolation: distance 1 -> maxBright, distance numPast -> minBright
+                        brightness = maxBright - (distance - 1) * (maxBright - minBright) / (numPast - 1);
+                    }
+                    entry.style.color = `rgb(0, ${Math.floor(brightness)}, ${Math.floor(brightness / 4)})`;
                 }
                 container.appendChild(entry);
             }
