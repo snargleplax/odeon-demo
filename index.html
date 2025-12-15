@@ -59,10 +59,13 @@
         }
         .sidebar-item {
             padding: 2px 0;
-            color: #aaa;
+            color: #888; /* Known but not present */
+        }
+        .sidebar-item.present {
+            color: #ddd; /* Full brightness for present characters */
         }
         .sidebar-item.unknown {
-            color: #555;
+            color: #555; /* Dim for unknown */
         }
         .sidebar-item .symbol {
             margin-right: 5px;
@@ -99,10 +102,6 @@
         #location {
             color: #e94560;
             font-size: clamp(14px, 2.5vw, 18px);
-        }
-        #characters {
-            color: #4ecdc4;
-            font-style: italic;
         }
         #event-log {
             font-size: clamp(12px, 2vw, 16px);
@@ -255,7 +254,6 @@
         <div id="event-log"></div>
         <div id="info-panel">
             <div id="location"></div>
-            <div id="characters"></div>
         </div>
         <div id="goals">
             <h3>Goals:</h3>
@@ -360,13 +358,6 @@
             // Update location
             document.getElementById('location').textContent = frame.location || '';
 
-            // Update characters
-            if (frame.characters && frame.characters.length > 0) {
-                document.getElementById('characters').textContent = frame.characters.join(', ') + ' is here';
-            } else {
-                document.getElementById('characters').textContent = '';
-            }
-
             // Render event log from frame
             renderEventLog(frame.eventLog || []);
 
@@ -391,7 +382,14 @@
             if (frame.sidebarCharacters) {
                 for (const char of frame.sidebarCharacters) {
                     const item = document.createElement('div');
-                    item.className = 'sidebar-item' + (char.isKnown ? '' : ' unknown');
+                    // 3 brightness levels: present (full), known (partial), unknown (dim)
+                    let cls = 'sidebar-item';
+                    if (char.isPresent) {
+                        cls += ' present';
+                    } else if (!char.isKnown) {
+                        cls += ' unknown';
+                    }
+                    item.className = cls;
                     const symbol = document.createElement('span');
                     symbol.className = 'symbol';
                     symbol.textContent = '@';
